@@ -34,6 +34,7 @@ with get_conn() as conn:
             )
             """
         )
+        conn.commit()
 
 
 # ---------- APP ----------
@@ -78,11 +79,18 @@ def save_product(n, name, brand):
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO products (name, brand) VALUES (%s, %s)",
+                "INSERT INTO products (name, brand) VALUES (%s, %s) RETURNING id",
                 (name, brand)
             )
+            new_id = cur.fetchone()[0]
 
-    return "Producto guardado"
+            cur.execute("SELECT current_database()")
+            dbname = cur.fetchone()[0]
+
+        conn.commit()
+
+    print(f"Inserted product id={new_id} into db={dbname}")
+    return f"Producto guardado (id={new_id}, db={dbname})"
 
 # ---------- RUN ----------
 if __name__ == "__main__":
